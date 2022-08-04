@@ -1,0 +1,8 @@
+(executable
+ (name tui)
+ (public_name bug-game)
+ (libraries notty notty.unix))
+
+(env
+ (dev
+  (flags (:standard -warn-error -A -w -9))))

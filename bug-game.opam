@@ -1,0 +1,21 @@
+opam-version: "2.0"
+name: "bug-game"
+version: "0.0.0"
+synopsis: "An implementation of the Bug abstract game"
+description: "An implementation of the Bug abstract game"
+maintainer: "<comonoid@protonmail.com>"
+author: "<comonoid@protonmail.com>"
+license: "MIT"
+homepage: "https://github.com/Bannerets/bug-game"
+dev-repo: "git+https://github.com/Bannerets/bug-game.git"
+bug-reports: "https://github.com/Bannerets/bug-game/issues"
+build: [["dune" "build" "-p" name "-j" jobs]]
+run-test: [["dune" "runtest" "-p" name]]
+depends: [
+  "ocaml"
+  "dune"
+  "notty"
+]
+pin-depends: [
+  "notty.dev" "git+https://github.com/crackcomm/notty#03f895cc6fbfb0ada15c6e92ab02ade4084a163c"
+]

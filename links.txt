@@ -1,0 +1,10 @@
+- https://www.redblobgames.com/grids/hexagons/
+- https://codegolf.stackexchange.com/questions/222709/sticky-polyhexes
+- https://en.wikipedia.org/wiki/Polyhex_(mathematics)
+- https://abarothsworld.com/Puzzles/Polyhex/Polyhex%20Symmetries.htm
+- https://oeis.org/A000228
+- https://mathworld.wolfram.com/Polyhex.html
+- https://www.mi.sanu.ac.rs/vismath/mir/pol.htm
+- https://math.stackexchange.com/questions/3459717/how-to-classify-polyominoes-by-shape
+
+- https://godbolt.org/z/vT5TWq8WK

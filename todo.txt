@@ -1,0 +1,50 @@
+- add a test suite with complicated cases like this one:
+
+    . . . . .
+   B . . . . .
+  . B . . . . .
+ B B . . . . . .
+W . W B B x . . .
+ B W W B B . . .
+  . W W . . . .
+   B . B B . .
+    W B . B .
+Black to move at `x`
+
+
+
+Other cases:
+
+   . . . .
+  W . . . .
+ . B . . . .
+x W B . . . .
+ . B . . . .
+  W . . . .
+   . . . .
+Black to move at `x` (should not grow, then white eats and can grow only at x)
+
+  . . .
+ . . x .
+B B . W .
+ . B W .
+  . . .
+White to move at `x` (should eat and grow)
+
+  . . W
+ . . . W
+B B B x .
+ . . . .
+  . . .
+White to move at `x` (should not eat)
+
+   W W . .
+  W . . . .
+ B . . . . .
+x . W . . . .
+ B . . . . .
+  W . . . .
+   W W . .
+White to move at `x` (White doesn't eat, then Black can choose one of the bugs)
+
+...

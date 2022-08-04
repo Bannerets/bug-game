@@ -1,0 +1,38 @@
+opam-version: "2.0"
+name: "bug-game"
+version: "0.0.0"
+synopsis: "An implementation of the Bug abstract game"
+description: "An implementation of the Bug abstract game"
+maintainer: "<comonoid@protonmail.com>"
+authors: "<comonoid@protonmail.com>"
+license: "MIT"
+homepage: "https://github.com/Bannerets/bug-game"
+bug-reports: "https://github.com/Bannerets/bug-game/issues"
+dev-repo: "git+https://github.com/Bannerets/bug-game.git"
+depends: [
+  "base-bigarray" {= "base"}
+  "base-bytes" {= "base"}
+  "base-threads" {= "base"}
+  "base-unix" {= "base"}
+  "cppo" {= "1.6.9"}
+  "csexp" {= "1.5.1"}
+  "dune" {= "3.3.1"}
+  "dune-configurator" {= "3.3.1"}
+  "lwt" {= "5.6.1"}
+  "notty" {= "dev"}
+  "ocaml" {= "4.14.0"}
+  "ocaml-base-compiler" {= "4.14.0"}
+  "ocaml-config" {= "2"}
+  "ocaml-options-vanilla" {= "1"}
+  "ocamlbuild" {= "0.14.1"}
+  "ocamlfind" {= "1.9.5"}
+  "ocplib-endian" {= "1.2"}
+  "topkg" {= "1.0.5"}
+  "uutf" {= "1.0.3"}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+run-test: ["dune" "runtest" "-p" name]
+pin-depends: [
+  "notty.dev"
+  "git+https://github.com/crackcomm/notty#03f895cc6fbfb0ada15c6e92ab02ade4084a163c"
+]
