@@ -7,4 +7,4 @@
 - https://www.mi.sanu.ac.rs/vismath/mir/pol.htm
 - https://math.stackexchange.com/questions/3459717/how-to-classify-polyominoes-by-shape
 
-- https://godbolt.org/z/vT5TWq8WK
+- https://godbolt.org/z/3K9o56W14

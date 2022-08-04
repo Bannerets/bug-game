@@ -53,7 +53,8 @@ end = struct
     let player = Player.opponent @@ Game.current_player game in
     let p = match player with Black -> "b" | White -> "w" in
     let num n = if n >= 0 then "+" ^ string_of_int n else string_of_int n in
-    Printf.sprintf "%s%s%s%s" p (num coord.q) (num coord.r) (num coord.s)
+    Coord.(Printf.sprintf "%s%s%s%s" p
+      (num @@ q coord) (num @@ r coord) (num @@ s coord))
 
   let fold (f : ?active:bool -> _) init t =
     let fold_move_list (i, acc) list =
@@ -100,9 +101,9 @@ let winning_line game =
   | InProgress -> I.strf ""
   | Won p -> I.strf "%a has won!" pp_player p
 
-let convert_coord center (c : Coord.t) =
+let convert_coord center c =
   (* Axial coordinates relative to the left side: *)
-  let x = c.q + center and y = c.r + center in
+  let x = Coord.q c + center and y = Coord.r c + center in
   (* With the shift (the rows above center are already shifted in axial): *)
   let x = if y > center then x - (center - y) else x in
   x, y

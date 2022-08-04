@@ -1,6 +1,6 @@
 module Coord : sig
-  type t = private { q : int; r : int; s : int }
-  (** Cube coordinates for a hexhex board.
+  type t
+  (** Cube coordinates for a hexhex board: [q, r, s].
       Must hold the invariant: [q + r + s = 0].
       The module does not check the invariant. *)
 
@@ -9,8 +9,13 @@ module Coord : sig
     | W   |   E
     |  SW | SE
 
+  val q : t -> int
+  val r : t -> int
+  val s : t -> int
+
   val make : int -> int -> int -> t
-  (** [make q r s]. The result is unspecified if [q + r + s <> 0]. *)
+  (** [make q r s]. The result is unspecified if [q + r + s <> 0] or
+      if [q], [r], [s] are not in range of [[-128, 127]]. *)
 
   val zero : t
 
@@ -31,49 +36,56 @@ module Coord : sig
   val show : t -> string
   val invariants : t -> unit
 end = struct
-  type t = { q : int; r : int; s : int }
-  (* Technically [s] is not necessary to store, but we store it
-     anyway for convenience.
-     It is possible to store a coordinate in 8 bits (or 16 bits if we drop
-     support for 32-bit systems) inside the int to save 24 bytes of space.
-     Additionaly, that would also make the type unboxed.
-     The record should take 32 bytes of space on 64-bit systems now, not
-     counting the pointer. *)
+  type t = int
+  (* The int holds three values: q, r, s. The values are stored in the bitset:
+     000000000000000000000000000000000000000ssssssssrrrrrrrrqqqqqqqq
+     Note that the least significant bit is the OCaml tag and equals to 1.
+     With the representation of [t] as a record { q : int; r : int; s : int }
+     instead of the bitset, [t] would take 32 bytes of space (on 64-bit
+     systems) instead of 8 bytes. Additionaly, the type would be boxed, taking
+     another 8 bytes for the pointer and triggering the GC. *)
 
-  let[@inline] make q r s = (* assert (q + r + s = 0); *) { q; r; s }
+  let[@inline] q x = x land 0xFF - 128
+  let[@inline] r x = x lsr 8 land 0xFF - 128
+  let[@inline] s x = x lsr 16 land 0xFF - 128
 
-  let invariants t = assert (t.q + t.r + t.s = 0)
+  let[@inline] make q r s =
+    assert (q + r + s = 0);
+    (q + 128) lor ((r + 128) lsl 8) lor ((s + 128) lsl 16)
+
+  let invariants t = assert (q t + r t + s t = 0)
 
   let zero = make 0 0 0
 
-  let (=) x y = x.q = y.q && x.r = y.r && x.s = y.s
+  let (=) x y = q x = q y && r x = r y && s x = s y
 
-  let (--) x y = make (x.q - y.q) (x.r - y.r) (x.s - y.s)
+  let (--) x y = make (q x - q y) (r x - r y) (s x - s y)
 
-  let (++) x y = make (x.q + y.q) (x.r + y.r) (x.s + y.s)
+  let (++) x y = make (q x + q y) (r x + r y) (s x + s y)
 
-  let less_than x n = abs x.q < n && abs x.r < n && abs x.s < n
+  let less_than x n = abs (q x) < n && abs (r x) < n && abs (s x) < n
 
-  let permutations ({ q; r; s } as x) =
+  let permutations x =
+    let q = q x and r = r x and s = s x in
     [x; make q s r; make r q s; make r s q; make s q r; make s r q]
 
   let offsets = permutations @@ make ~-1 0 1
   let neighbors x = List.rev_map ((++) x) offsets
 
   (* (The rotate functions are unused for now) *)
-  let rotate_cw x = make (-x.r) (-x.s) (-x.q)
-  let rotate_ccw x = make (-x.s) (-x.q) (-x.r)
+  let rotate_cw x = make (-r x) (-s x) (-q x)
+  let rotate_ccw x = make (-s x) (-q x) (-r x)
 
-  let neg x = make (-x.q) (-x.r) (-x.s) (* diagonal reflection *)
+  let neg x = make (-q x) (-r x) (-s x) (* diagonal reflection *)
 
   let symmetries x =
     let p = permutations x in
     List.rev_append p (List.rev_map neg p)
 
   let compare x y =
-    match Int.compare x.q y.q with
-    | 0 -> (match Int.compare x.r y.r with
-      | 0 -> Int.compare x.s y.s
+    match Int.compare (q x) (q y) with
+    | 0 -> (match Int.compare (r x) (r y) with
+      | 0 -> Int.compare (s x) (s y)
       | c -> c)
     | c -> c
 
@@ -87,7 +99,7 @@ end = struct
     | SW -> x ++ make ~-1 1 0
     | SE -> x ++ make 0 1 ~-1
 
-  let show x = Printf.sprintf "(%d %d %d)" x.q x.r x.s
+  let show x = Printf.sprintf "(%d %d %d)" (q x) (r x) (s x)
 end
 
 module Player = struct
@@ -150,10 +162,11 @@ end = struct
     HexSet.fold f polyhex symmetries_init
 
   let centered polyhex =
-    let sum c (q, r, s, len) = Coord.(c.q + q, c.r + r, c.s + s, len + 1) in
+    let sum c (q_s, r_s, s_s, len) =
+      Coord.(q c + q_s, r c + r_s, s c + s_s, len + 1) in
     let q_s, r_s, s_s, len = HexSet.fold sum polyhex (0, 0, 0, 0) in
     let f x =
-      Coord.(make (x.q * len - q_s) (x.r * len - r_s) (x.s * len - s_s)) in
+      Coord.(make (q x * len - q_s) (r x * len - r_s) (s x * len - s_s)) in
     HexSet.map f polyhex
 
   (* TODO: A more efficient version of "are_symmetrical"?
@@ -415,8 +428,8 @@ end = struct
   }
 
   let make ?(size = 4) () =
-    if size < 0 then
-      invalid_arg "Game.make: size must be greater than 0";
+    if size < 0 || size > 126 then
+      invalid_arg "Game.make: size must be greater than 0 and less than 127";
     {
       board_size = size;
       bugs = BugStore.empty;
