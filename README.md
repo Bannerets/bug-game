@@ -3,6 +3,8 @@
 
 The source code of the implementation: [src/bug.ml](src/bug.ml)
 
+![Screenshot](screenshot.png)
+
 ---
 
 Installation:
