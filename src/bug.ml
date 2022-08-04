@@ -90,70 +90,6 @@ end = struct
   let show x = Printf.sprintf "(%d %d %d)" x.q x.r x.s
 end
 
-module Polyhex : sig
-  type t
-
-  val monohex : t
-  (** There is always only one monohex *)
-
-  val add_hex : Coord.t -> t -> t
-
-  val hexes : t -> Coord.t list
-
-  val are_symmetrical : t -> t -> bool
-  (** [are_symmetrical x y] is [true] if [x] and [y] are
-      equivalent free polyhexes; [false] otherwise *)
-
-  val neighboring_coords : t -> Coord.t list
-end = struct
-  module CoordSet = Set.Make(Coord)
-  module HexSet = CoordSet
-  type t = HexSet.t
-
-  let monohex = HexSet.singleton Coord.zero
-
-  let add_hex = HexSet.add
-
-  let (=) = HexSet.equal
-
-  let hexes = HexSet.elements
-
-  let symmetries_init = List.init 12 (fun _ -> HexSet.empty)
-  let symmetries t =
-    let f hex_coord acc =
-      let coord_syms = Coord.symmetries hex_coord in
-      List.map2 (fun s b -> HexSet.add b s) acc coord_syms
-    in
-    HexSet.fold f t symmetries_init
-
-  let centered t =
-    let sum c (q, r, s, len) = Coord.(c.q + q, c.r + r, c.s + s, len + 1) in
-    let q_s, r_s, s_s, len = HexSet.fold sum t (0, 0, 0, 0) in
-    let f x =
-      Coord.(make (x.q * len - q_s) (x.r * len - r_s) (x.s * len - s_s)) in
-    HexSet.map f t
-
-  (* TODO: A more efficient version of "are_symmetrical"?
-
-     Is it possible to precalculate a list of canonical forms?
-     For size=6, there are 814 fixed polyhexes. For size=5, 186. *)
-
-  let are_symmetrical x y =
-    let x = centered x in
-    let y = centered y in
-    List.exists ((=) y) (symmetries x)
-
-  let neighboring_coords t =
-    let f hex total_neighbors =
-      let hex_neighbors = CoordSet.of_list @@ Coord.neighbors hex in
-      CoordSet.union total_neighbors hex_neighbors
-    in
-    let result = CoordSet.fold f t CoordSet.empty in
-    (* Then remove the coords inside the polyhex *)
-    let result = CoordSet.diff result t in
-    CoordSet.elements result
-end
-
 module Player = struct
   type t = Black | White
   let opponent = function Black -> White | White -> Black
@@ -170,51 +106,76 @@ module ABug : sig
 
   val grow : t -> Coord.t -> t
 
-  val size : t -> int
-  val owner : t -> Player.t
-
   val stones : t -> Coord.t list
+  val owner : t -> Player.t
+  val size : t -> int
 
   val are_symmetrical : t -> t -> bool
-  (** See [Polyhex.are_symmetrical] *)
+  (** [are_symmetrical x y] is [true] if [x] and [y] are
+      equivalent free polyhexes; [false] otherwise *)
 
   val neighboring_coords : t -> Coord.t list
 end = struct
+  module CoordSet = Set.Make(Coord)
+  module HexSet = CoordSet
+
   type t = {
-    polyhex : Polyhex.t;
+    polyhex : HexSet.t;
     size : int;
     owner : Player.t;
-    board_coord : Coord.t;
   }
-  (* The root of the polyhex ([0;0;0] coordinates) is mapped to the
-     [board_coord] coordinates on the board *)
-
-  let map_coord t coord = Coord.(t.board_coord -- coord)
 
   let monohex player coord = {
-    polyhex = Polyhex.monohex;
+    polyhex = HexSet.singleton coord;
     size = 1;
     owner = player;
-    board_coord = coord;
   }
 
   let grow t coord = {
     t with
+    polyhex = HexSet.add coord t.polyhex;
     size = t.size + 1;
-    polyhex = Polyhex.add_hex (map_coord t coord) t.polyhex;
   }
 
+  let stones t = HexSet.elements t.polyhex
+  let owner t = t.owner
   let size t = t.size
 
-  let owner t = t.owner
+  let symmetries_init = List.init 12 (fun _ -> HexSet.empty)
+  let symmetries polyhex =
+    let f hex_coord acc =
+      let coord_syms = Coord.symmetries hex_coord in
+      List.map2 (fun s b -> HexSet.add b s) acc coord_syms
+    in
+    HexSet.fold f polyhex symmetries_init
 
-  let stones t = List.rev_map (map_coord t) @@ Polyhex.hexes t.polyhex
+  let centered polyhex =
+    let sum c (q, r, s, len) = Coord.(c.q + q, c.r + r, c.s + s, len + 1) in
+    let q_s, r_s, s_s, len = HexSet.fold sum polyhex (0, 0, 0, 0) in
+    let f x =
+      Coord.(make (x.q * len - q_s) (x.r * len - r_s) (x.s * len - s_s)) in
+    HexSet.map f polyhex
 
-  let are_symmetrical x y =
-    x.size = y.size && Polyhex.are_symmetrical x.polyhex y.polyhex
+  (* TODO: A more efficient version of "are_symmetrical"?
+
+     Is it possible to precalculate a list of canonical forms?
+     For size=6, there are 814 fixed polyhexes. For size=5, 186. *)
+
+  let are_symmetrical t1 t2 =
+    t1.size = t2.size &&
+    let x = centered t1.polyhex in
+    let y = centered t2.polyhex in
+    List.exists (HexSet.equal y) (symmetries x)
 
   let neighboring_coords t =
-    List.rev_map (map_coord t) @@ Polyhex.neighboring_coords t.polyhex
+    let f hex total_neighbors =
+      let hex_neighbors = CoordSet.of_list @@ Coord.neighbors hex in
+      CoordSet.union total_neighbors hex_neighbors
+    in
+    let result = CoordSet.fold f t.polyhex CoordSet.empty in
+    (* Then remove the coords inside the polyhex *)
+    let result = CoordSet.diff result t.polyhex in
+    CoordSet.elements result
 end
 
 module BugStore : sig
