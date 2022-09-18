@@ -77,12 +77,12 @@ let white_color = A.(fg lightwhite)
 let attr_black = A.(st bold ++ black_color)
 let attr_white = A.(st bold ++ white_color)
 
-let black_stone = I.string ~attr:attr_black "B "
-let white_stone = I.string ~attr:attr_white "W "
-let allowed = I.string ". "
-let disallowed = I.string ~attr:A.(fg lightblack) ", "
-let black_stone_allowed = I.string ~attr:A.(st italic ++ black_color) "B "
-let white_stone_allowed = I.string ~attr:A.(st italic ++ white_color) "W "
+let black_stone = I.string attr_black "B "
+let white_stone = I.string attr_white "W "
+let allowed = I.string A.empty ". "
+let disallowed = I.string A.(fg lightblack) ", "
+let black_stone_allowed = I.string A.(st italic ++ black_color) "B "
+let white_stone_allowed = I.string A.(st italic ++ white_color) "W "
 
 let pp_player ppf (player : Player.t) =
   match player with
@@ -159,7 +159,7 @@ let board game =
       )
     done;
     himg := I.hpad shift shift !himg;
-    himg := !himg <|> I.string "|";
+    himg := !himg <|> I.string A.empty "|";
     vimg := !vimg <-> !himg
   done;
   !vimg
@@ -191,7 +191,7 @@ let help =
             ^ "    B black stone    W white stone" in
   assert String.(length line1 <= 80 && length line2 <= 80);
   let attr = A.(fg lightblack) in
-  I.string ~attr line1 <-> I.string ~attr line2
+  I.string attr line1 <-> I.string attr line2
 
 type t = {
   cursor : Coord.t;

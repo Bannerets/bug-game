@@ -16,6 +16,3 @@ depends: [
   "dune"
   "notty"
 ]
-pin-depends: [
-  "notty.dev" "git+https://github.com/crackcomm/notty#03f895cc6fbfb0ada15c6e92ab02ade4084a163c"
-]

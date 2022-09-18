@@ -14,12 +14,13 @@ depends: [
   "base-bytes" {= "base"}
   "base-threads" {= "base"}
   "base-unix" {= "base"}
+  "cmdliner" {= "1.1.1"}
   "cppo" {= "1.6.9"}
   "csexp" {= "1.5.1"}
   "dune" {= "3.3.1"}
   "dune-configurator" {= "3.3.1"}
   "lwt" {= "5.6.1"}
-  "notty" {= "dev"}
+  "notty" {= "0.2.3"}
   "ocaml" {= "4.14.0"}
   "ocaml-base-compiler" {= "4.14.0"}
   "ocaml-config" {= "2"}
@@ -32,7 +33,3 @@ depends: [
 ]
 build: ["dune" "build" "-p" name "-j" jobs]
 run-test: ["dune" "runtest" "-p" name]
-pin-depends: [
-  "notty.dev"
-  "git+https://github.com/crackcomm/notty#03f895cc6fbfb0ada15c6e92ab02ade4084a163c"
-]
